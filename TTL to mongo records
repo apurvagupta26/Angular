@@ -1,0 +1,24 @@
+This can be used when we are auditing logs from UI application and storing in mongo. but due to some memory constrint, we need to store logs for certsin period of time only.
+In MongoDB, you can set a TTL (Time-to-Live) for records in a collection using a TTL index. A TTL index will automatically remove documents from a collection after a specified
+amount of time.
+Here’s how you can set a TTL index:
+  1. Add a Date Field
+  First, you need to add a date field to your documents that MongoDB will use to determine when the document should expire. For example, you can add a field called createdAt.
+      {
+        "_id": ObjectId("64a1f3f1234567890"),
+        "createdAt": ISODate("2024-09-23T14:00:00Z"),
+        "data": "some document data"
+      }
+2. Create a TTL Index
+You then create a TTL index on the createdAt field with a specified expiration time in seconds. For example, if you want to delete documents 1 hour (3600 seconds) after their
+createdAt time, you can do this using the following command:
+    db.collection.createIndex(
+       { "createdAt": 1 },
+       { expireAfterSeconds: 3600 }
+    )
+Notes:
+The TTL index only works on fields that contain a BSON Date value.
+The background process that removes expired documents runs every 60 seconds by default, so there might be a slight delay between when a document is eligible for deletion and when it is actually removed.
+Once the TTL index is set, documents will be automatically removed, without needing to write manual deletion logic.
+
+
