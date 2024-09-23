@@ -49,3 +49,4 @@ So, the next requests can access the refreshed, accurate data.
 When refreshing data takes longer than expected, make sure your application handles it. Displaying slightly outdated data is often better than presenting no data at all.
 
 The idea is to find the right balance between freshness and efficiency. Handling cache expiration guarantees that your users receive accurate and relevant data.
+![image](https://github.com/user-attachments/assets/f635536e-dd1e-4510-9408-0b9d6fd6527e)
