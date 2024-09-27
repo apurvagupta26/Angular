@@ -1,0 +1,1264 @@
+router has no provider-
+RouterTestingModule.withRoutes([]) to be added in imports.
+
+NullInjectorError: R3InjectorError(DynamicTestModule)[SharedService -> HttpClient -> HttpClient]: 
+  NullInjectorError: No provider for HttpClient!
+  Add Httpclient to providers array in spec file below declarations array
+
+Error: Token InjectionToken MSAL_CONFIG is missing a ɵprov definition.
+provide usevalue to {provide:MSAL_CONFIG}
+
+NullInjectorError: No provider for Overlay
+OverlayModule added in imports
+
+  NullInjectorError: No provider for InjectionToken mat-dialog-scroll-strategy!
+  add MatDialogModule to imports
+  
+ NullInjectorError: No provider for InjectionToken ToastConfig! 
+   ToastrModule.forRoot({
+      positionClass :'toast-bottom-right'
+    }) in imports array
+
+
+No provider for RouterModule
+ RouterModule.forRoot([])
+
+
+NO function provided for router-
+RouterTestingModule import array.
+
+I had similar problem running all test at once.
+If run one by one then I don't see this error. 
+So I added the following line of code at each test method end-
+
+AfterAll TypeError: Cannot read properties of undefined (reading 'url')
+fixture.destroy
+
+
+ "Error: Export of name 'matAutocomplete' not found!" string. I fixed it in my project by importing the MatAutocompleteModule. So in the module.ts of your component you'll want to add the following:
+
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+
+(then scroll down to your imports array)
+
+imports: [
+  MatAutocompleteModule
+]
+
+
+for getting rid of the errors in console of the spec file add -  schemas: [NO_ERRORS_SCHEMA],
+ below providers in spec file.in async beforeeach
+
+
+If there is any service call in ngOnInit then you have to maock that as it will throw error like-
+TypeError: Cannot read properties of undefined (reading 'subscribe')
+
+
+TypeError: Cannot read properties of undefined (reading 'subscribe')---> this means that you have a property
+or function in ngOninit /other function which has observable in shared service.SO you need to create a sharedservice stub and 
+write var:(of({})) as prop of that service.
+
+
+TypeError: Cannot read properties of undefined (reading 'apiGatewayAdminConfig')
+resolve: in providers array->{provide:EnvConfigService,useValue:envconfigStub}
+ const envconfigStub={
+    appSharedUrls:{
+      apiGatewayAdminConfig:{
+
+      }
+    }
+ }
+ 
+ 
+ add {provide: MatDialogRef, useValue: {close: () => {}}} in providers array and then-
+  it('should call the function to close the dialog', () => {
+      const dialogSpy = spyOn(component.dialogRef, 'close');
+      component.closeDialog();
+      fixture.detectChanges();
+      expect(dialogSpy).toHaveBeenCalled();
+    });
+	
+code- closeDialog() {
+    this.dialogRef.close();
+  }
+  
+  
+  ############################################################################################
+  for mocking dialog component, create the mock data object in .spec.ts file 
+  export mock_obj={
+  }
+  
+  then use this way in providers-  {provide:MAT_DIALOG_DATA,useValue:MOCK_ROUTEID_RESPONSE.ROUTE_DIALOG}
+  if there is any dependency on mock data in ngoninit,all errors will be resolved using this.
+  import the mock data spec file as - import * as MOCK_ROUTEID_RESPONSE from '../../../mocks/apigatewayadmin/mock-routeId.spec' in the dialog 
+  component spec file
+  
+  ############################################run a single test file####################################
+  src\app\admin-gateway\services\api-gateway-admin-service.service.spec.ts ->copy relative path
+  ng test --include='src\app\admin-gateway\services\api-gateway-admin-service.service.spec.ts' --code-coverage 
+  
+  
+##################################################################################################################
+TypeError: this.sharedServ.updateAction is not a function
+
+create the shareservice stub with updateAction() and return observable.
+stub={
+ updateAction:()=>(of({}))
+}
+
+##############################################test emit()##########################################################################
+
+onSearch(searchTerm: string): void {
+    this.searched.emit(searchTerm);
+  }
+
+it('onSearch test', () => {
+    const emitSpy = spyOn(component.searched, 'emit');
+    component.onSearch('test');
+    expect(emitSpy).toHaveBeenCalled();
+  });
+
+######################################################################################################################
+
+if you have  this.sharedServ.updateSelectedEnv in your ts file
+inject the shared service to spec file to use it in spy method.
+
+##############################################################################################################
+could not find an object to spy upon for showToast()
+
+inject the toaster service and then use in spy method.
+
+
+####################################################################################################################
+ this.sharedServ.checkRoutesFromDbUrl().subscribe(response => {
+      this.sharedServ.updateEndPointChanges(response.ok)
+    },
+      err => {
+        this.toasterService.showToast('error', err, 'error')
+        this.sharedServ.updateEndPointChanges(false)
+      });
+	  
+	  
+	  for this=>
+	  it('getSelectedEnv error',()=>{ 
+    spyOn(sharedService,'checkRoutesFromDbUrl').and.callFake(() => {
+      return throwError(new Error('Fake error'));
+    });
+    let spyToast=spyOn(toasterService,'showToast');   
+    component.getSelectedEnv();
+    fixture.detectChanges(); 
+    expect(spyToast).toHaveBeenCalledTimes(1);
+  })
+  
+  ####################################################################################################################
+  
+  ts file content-
+  @Input() label: string;
+  @Input() width = 23;
+  @Input() maxlength: string;
+  @Input() placeholder: string;
+  @Input() formControlName: string;
+  @Input() dropdownOptions: any[] = [];
+  @Input() control = new FormControl('');
+  
+   ngOnChanges(): void {
+    if (this.dropdownOptions && this.dropdownOptions.length > 0) {
+      this.filterDropdown();
+    }
+  }
+  
+  ngOnChange will be called when the @input value changes.OnChanges gets called twice - once for every @Input.
+  depending on your app, the order of calls to OnChanges may not be consistent and then your app may act inconsistently with race conditions.
+  The solution is to use SimpleChanges. And further to that - to ALWAYS use SimpleChanges.
+  the changes parameter tells us which @Input() caused the call
+  
+  
+  
+  to write unit test case for this-
+  
+   it('verify ngOnChanges', () => {
+    component.label = 'testLabel';
+    component.placeholder = 'testPlaceholder';
+    component.formControlName = 'testFormControl';
+    component.dropdownOptions = ['any status', 'future', 'in progress', 'resolved', 'removed'];
+    component.ngOnChanges();
+    fixture.detectChanges();
+    component.control.setValue('removed');
+    fixture.detectChanges();
+    expect(component.dropdownOptions.length).toBe(5);
+  });
+  
+  
+  ########################################################################################################################################
+  
+  
+  
+  test the enter event-
+  const event=new KeyboardEvent("keydown",{key:'Enter'});
+   Object.defineProperty(event,"keyCode", {
+        get : () => 13
+      });
+	  
+	  as keycode is not changeable property
+  
+  ##########################################################################################################
+  
+  type error:filter is not a function
+  make sure you access the correct data for the functin to be applied.
+  
+   component.gatewayRouteData=getRoutesfromdbData.default;=>throws error
+  component.gatewayRouteData=getRoutesfromdbData.default.mongoRoutes;=>correction
+  
+  
+  #########################################################################################################
+   checkforRoute(sourcePath, event): void {
+    this.sharedServ.spanner.setLoader(true);
+    if (
+      (event && event.type == 'keydown' && event.keyCode == 13) ||
+      event.type == 'click'
+    ) {
+      let path = sourcePath.value;
+      this.sharedServ.apiGatewayService
+        .getRouteCheckByPath(path, this.selectedEnv)
+        .subscribe(
+          (res) => {
+            console.log('res',res);
+            this.routeCheckResponse = res;
+            this.sharedServ.spanner.setLoader(false);
+          },
+          (error) => {
+            console.log("error",error);
+            this.routeCheckError = error;
+            this.sharedServ.spanner.setLoader(false);
+          }
+        );
+    }
+  }
+  
+   it('returns error if not found', () => {
+      const mockSourcePath = {
+        value: '^/a'
+      }
+      const keyEvent = new KeyboardEvent('keydown', {
+        key: "Enter"
+      });
+      Object.defineProperty(keyEvent, "keyCode", {
+        get: () => 13
+      });
+      Object.defineProperty(keyEvent, "type", {
+        get: () => 'click'
+      });
+      spyOn(sharedService.apiGatewayService, 'getRouteCheckByPath').and.callFake(()=>{
+        return throwError('error')
+      }     
+      );
+      component.checkforRoute(mockSourcePath, keyEvent);
+      fixture.detectChanges();
+      expect(component.routeCheckError).toBe('error');
+    });
+  });
+  
+  
+  ##################################################################################################################
+  
+  set the value of formcontrols in unit testing
+  let sourceInput=component.searchRouteForm.controls['source'];
+      sourceInput.setValue('^/apurva');
+	  
+##########################################################################################################################
+  MOCK INPUT PROPERTY IN JASMINE
+  https://stackoverflow.com/questions/57972500/angular-unit-test-how-to-mock-input-property-in-jasmin
+  
+  #######################################################################################################################
+  MOCK FORMCONTROL VALUE
+  https://stackoverflow.com/questions/56267569/how-to-mock-formcontrol-value-gettime-in-unit-tests
+  
+#######################################################################################################################
+
+deleteRoute(route): void {
+    console.log("route",JSON.stringify(route));
+    let deleteRouteId = route.routeId;
+    let buttonText = { ok: 'CONFIRM', cancel: 'CANCEL' };
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      data: {
+        message: ApigatewayAdminConstants.DELETE_CONFIRM_MESSAGE.replace(
+          '[]',
+          deleteRouteId
+        ),
+        title: ApigatewayAdminConstants.DELETE_CONFIRM_TITLE,
+        buttonType: 2,
+        buttonText: {
+          ok: buttonText.ok,
+          cancel: buttonText.cancel,
+        },
+      },
+    });
+    this.spanner.setLoader(true);
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log('delete--result',result);
+      Eif (result) {
+        this.apiGatewayService
+          .deleteRoute(route.routeId, this.selectedEnv.value)
+          .subscribe(
+            (res) => {
+              if (Boolean(res?.success)) {
+                this.toaster.showToast(
+                  ' ',
+                  ApigatewayAdminConstants.DELETE_SUCCESS_MESSAGE.replace(
+                    '[]',
+                    route.routeId + ''
+                  ),
+                  'success'
+                );
+                this.apiGatewayService
+                  .getRoutesFromDB(this.selectedEnv.value)
+                  .subscribe((routes) => {
+                    this.updateRoutesCollection(routes.mongoRoutes);
+                    this.reloadTriggerDialog();
+                    this.spanner.setLoader(false);
+                  });
+              }
+            },
+			
+			
+			
+			mock a class-
+			 class dialogMock {
+    // When the component calls this.dialog.open(...) we'll return an object
+    // with an afterClosed method that allows to subscribe to the dialog result observable.
+    open() {
+      return {
+        afterClosed: () =>of(true)
+      };
+    }
+  };
+
+add it to providers-dialogMock
+ dialog = TestBed.inject(dialogMock);
+ 
+ medium.com/@aleixsuau/testing-angular-components-with-material-dialog-mddialog-1ae658b4e4b3
+ 
+ ###############################################################################################################################
+
+error-
+TypeError: this._scrollStrategy is not a function
+TypeError: this._scrollStrategy is not a function
+    at MatDialog._getOverlayConfig (http://localhost:9877/_karma_webpack_/webpack:/node_modules/@angular/material/__ivy_ngcc__/fesm2015/dialog.js:687:1)
+    at MatDialog._createOverlay
+	
+just remove 
+ {provide:MAT_DIALOG_SCROLL_STRATEGY,useValue:undefined}, from providers
+ 
+ #######################################################################################################
+ How to test toPromise in Angular 9
+ scenario-
+  this.apiGatewayService
+      .getRoutesFromDB(this.selectedEnv.value)
+      .toPromise()
+      .then((routes) => {
+        console.log('14:SharedService.getRoutesFromDB', routes);
+        this.updateRoutesCollection(routes.mongoRoutes);
+ 
+      })
+ 
+sol= https://stackoverflow.com/questions/63640433/how-to-test-topromise-in-angular-9
+
+##################################################################################################################
+
+if you have a function in sharedservice like-
+ updateFilteredRoutes(data) {
+    this.filteredRoutechanges$.next(data);
+    // console.log("13:SharedService.updateFilteredRoutes.data", data);
+  }
+  
+  and it is being used in the component as sharedservice.updateFilteredRoutes(data)
+  then add this in the sharedservice stub
+  
+  sstuv={
+   updateFilteredRoutes:()=>({}),
+  }
+  
+  ##########################################################################################
+  
+  NullInjectorError: R3InjectorError(DynamicTestModule)[SharedService -> AuthenticationService -> MsalService -> MsalService]: 
+  NullInjectorError: No provider for MsalService!
+  
+  add all the dependencies with their stub to resolve this error.
+  
+  
+  ############################################################################################################
+  ts file-
+  export class HomePageComponent implements OnInit {
+  userPermission: string = null;
+
+  constructor(private loadingSpinnerService: LoadingSpinnerService, private sharedService: SharedService) {
+    this.loadingSpinnerService.setLoader(true);
+    this.userPermission = this.sharedService.permission ? this.sharedService.permission : this.sharedService.getPermission();
+  }
+  
+  spec.ts
+   beforeEach(async () => {
+    mockSharedervice = jasmine.createSpyObj(['getPermission']);
+    mockLoadingSpinnerService = jasmine.createSpyObj(['setLoader']);
+    await TestBed.configureTestingModule({
+      declarations: [HomePageComponent],
+      providers: [
+        { provide: SharedService, useValue: mockSharedervice },
+        { provide: LoadingSpinnerComponent, useValue: mockLoadingSpinnerService }
+      ]
+    })
+      .compileComponents();
+  });
+
+
+##################################################################################################################
+https://stackoverflow.com/questions/53333050/how-to-mock-getter-parameter-value-of-a-mocked-service
+
+#################################################################################################################
+
+subjects- example
+
+in html file 
+ <input matInput formControlName="{{ host.name }}"
+ (keydown)="onInputUrlsChange(host)" />
+ 
+ in ts file-  inputUrlsChange: Subject<any> = new Subject<any>();
+  inputUrlsChangeSubscription: Subscription;
+  
+  inside ngOninit-
+   this.inputUrlsChangeSubscription = this.inputUrlsChange
+        .pipe(debounceTime(500))
+        .subscribe((x) => {
+          if (this.formControls[x.name].value == '') this.clearHostInput(x);
+          else {
+            this.selectedRouteHosts.forEach((a) => {
+              if (a.name == x.name) {
+                a.url = this.formControls[x.name].value;
+              }
+            });
+			
+#####################################################################################################################
+Error: NG0301: Export of name 'matTooltip' not found!
+error properties: Object({ code: '301' })
+Error: NG0301: Export of name 'matTooltip' not found!
+
+sol-
+add MatTooltipModule to imports array in spec file.
+
+then method-
+ onInputUrlsChange(obj): void {
+    this.inputUrlsChange.next(obj);
+  }
+  
+ So when there will be change in the input feild 
+ onInputUrlsChange will be called and changes will be emitted by
+ the subject inputUrlsChange.
+ 
+ ##########################################################################################################################
+ https://www.youtube.com/watch?v=m3BY6333CKc
+
+########################################################################################################################
+To cover the matdialog-code
+
+ const dialogMock = {
+    close: () => { },
+    open:()=>{},
+    afterClosed: () => of(true)
+  };
+  
+  in providers=
+    { provide: MatDialogRef, useValue: dialogMock },
+	  MatDialog,
+        MatDialogModule,
+		
+imports=MatDialogModule
+
+in the unit tesst
+spyOn(component.dialog, 'open').and.returnValue(
+        { afterClosed: () => of(true) } as MatDialogRef<typeof component>
+      );
+
+######################################################################################################################
+The Array.from() static method creates a new, shallow-copied Array instance from an array-like or iterable object.
+
+#######################################################################################################################
+
+if you want to use two diff values return values of a function which in in a service , create another instance of that service.
+One value will be returned as observable in the service stub using one instance.Using second instance (create instance using testbed)
+return the other val as observable.
+
+#######################################################################################################################
+
+
+Access modifiers in typescript are only used in compile time. You can't directly access them like this
+
+component.privateMethod(); // not accessible 
+But you can access them using any:
+
+(component as any).privateMethod();
+
+################################################################################################################################
+https://javascript.plainenglish.io/15-things-to-cover-when-writing-unit-tests-in-jasmine-b309e0c27115#e5ec
+
+####################################################################################################################################
+
+get db() of sharedservice- how to unit test them
+
+############################################################################################################################
+Angular 9 "Error: This constructor was not compatible with Dependency Injection."
+fix-> imports: [RouterTestingModule],
+
+#################################################################################################################################
+
+
+
+UPGRADE ANGULAR 11 TO 13
+1. firstly updtaed typescript version. to @4...
+2. npx @angular/cli@12 update @angular/core@12 @angular/cli@12
+https://serveanswer.com/questions/after-upgrading-to-angular-13-the-tests-with-code-coverage-is-failing
+https://stackoverflow.com/questions/64993118/error-should-not-import-the-named-export-version-imported-as-version
+Module '"@angular/compiler"' has no exported member 'componentFactoryName'. ->remove unused import from code.
+https://exerror.com/solved-using-for-division-is-deprecated-and-will-be-removed-in-dart-sass-2-0-0-in-nuxtjs/
+
+
+
+
+https://stackoverflow.com/questions/57216110/the-angular-compiler-requires-typescript-3-4-0-and-3-5-0-but-3-5-3-was-found
+https://www.c-sharpcorner.com/article/solution-of-angular-npm-error-npm-error-package-install-failed-see-above/#:~:text=The%20error%20in%20NPM%2C%20'error,system%2C%20and%20must%20reinstall%20NPM.
+https://stackoverflow.com/questions/54213415/is-there-alternative-for-datalist
+https://daily-dev-tips.com/posts/html-datalist/
+https://dev.to/siddev/customise-datalist-45p0
+https://funwithforms.com/posts/datalist/
+https://stackoverflow.com/questions/49996456/importing-json-file-in-typescript
+https://www.youtube.com/watch?v=5TnWFaI49aw   =>rxjs
+https://this-is-learning.github.io/rxjs-fundamentals-course/docs/part-2  =>rxjs
+
+#############################################################################################
+
+pagination in bootstrap
+https://ng-bootstrap.github.io/#/components/pagination/examples
+stackblitz.com/run?file=src%2Fapp%2Fpagination-justify.html
+
+html
+ <div class="d-flex justify-content-center">
+  <div  class="mat-dropdown">
+    <span>
+      <mat-select id="PerPage" class="form-control" [(ngModel)]="pageSize">
+        <mat-option [value]="5">5</mat-option>
+        <mat-option [value]="10">10</mat-option>
+        <mat-option [value]="25">25</mat-option>
+    </mat-select>
+  </span>   
+  </div>
+  <div class="paginator">
+    <ngb-pagination class="d-flex justify-content-center" [collectionSize]="data.length" [pageSize]="pageSize" [(page)]="page" [boundaryLinks]="true"></ngb-pagination>
+  </div>
+  </div>
+  
+  css file
+  
+  //align  dropdown and paginator
+  .mat-dropdown{
+  display: inline-block;
+  flex-wrap: nowrap;
+  height: 150px;
+  width: 60px;
+  padding-top: 50px;
+  justify-content: flex-end;
+}
+
+.paginator{
+  display: inline-block;
+  flex-wrap: nowrap;
+  height: 150px;
+  padding-left: 20px;
+  padding-top: 50px;
+  justify-content: flex-start;
+}
+
+//remove span with current text
+ngb-pagination {
+  ::ng-deep {
+      li a {
+          &:first-child .sr-only {
+              display: none;
+          }
+      }
+  }
+}
+
+//change color of active page
+ngb-pagination ::ng-deep ul > li.active > a {
+  background-color: #0960a4 !important;
+  //remove the shadow on click and active page
+    box-shadow: none !important;
+}
+ngb-pagination ::ng-deep ul > li:not(.active) > a {
+  color: black !important;
+  //remove the shadow on click and active page
+   box-shadow: none !important;
+}
+
+##############################################################################################
+https://stackoverflow.com/questions/71457867/angular-when-click-the-edit-button-load-creating-form-another-component-with
+
+###################pagination using mat paginator####################################################
+angularjswiki.com/material/mat-table-pagination/
+
+matSortDisableClear directive on table tag will not sort in random order
+
+for sorting with pagination-
+ sortData(sort: Sort){
+    this.sortedData=[];
+    const data = this.dataSource.filteredData.slice();
+    if (sort.active=='' || sort.direction=='') {
+      this.dataSource.data = this.dataSource.filteredData;
+      return;
+    }
+ this.dataSource.data = data.sort((a, b) => {
+      const isAsc = sort.direction === 'desc';
+      switch (sort.active) {
+        case 'Impacted Services':
+          return this.compare(a.impactedService, b.impactedService, isAsc);
+        case 'Customer Facing Service':
+          return this.compare(a.customerFacingService, b.customerFacingService, isAsc);
+        case 'Related Accn Identifier':
+          return this.compare(a.relatedAccountIdentifier, b.relatedAccountIdentifier, isAsc);
+        case 'Status':
+          return this.compare(a.status, b.status, isAsc);
+        case 'uiCategory':
+          return this.compare(a.uiCategory, b.uiCategory, isAsc);
+        case 'uiCategoryOrder':
+          return this.compare(a.uiCategoryOrder, b.uiCategoryOrder, isAsc);
+        case 'legacyProduct':
+          return this.compare(a.legacyProduct, b.legacyProduct, isAsc);
+        case 'Product':
+         return this.compare(a.product, b.product, isAsc);
+        default:
+          return 0;
+      }
+    });
+
+}
+
+html code-
+table mat-table [dataSource]="dataSource" #sort="matSort"
+  class="mat-elevation-z8" matSort matSortActive="Impacted Services" matSortDirection="desc" matSortDisableClear
+  (matSortChange)="sortData($event)">
+  
+  there are two things- this.dataSource.data and this.dataSource.filteredData.  filteredData is actual data. and data is sorted data.
+  to have page numbers between the prev nad next arrow. add additional custom directive. and add in declarations in module-StylePaginatorDirective.
+  
+  ################################################################################################################
+  navigation menu
+  https://stackblitz.com/edit/dynamic-nested-sidenav-menu-rsu3mm?file=app%2Fmenu-list-item%2Fmenu-list-item.component.html
+  
+  ###################################################################################################################################
+  
+ stackblitz.com/edit/angular-8holwx?file=src%2Fapp%2Fstyle-paginator.directive.ts
+ comment the line-e.pageIndex =0; to see the active page when number of items displayed on page changed 
+ after going to last page.
+ 
+ ##############################################################################################################################
+ resize the table column width by user-
+ https://stackblitz.com/edit/angular-table-resize?file=src%2Fapp%2Fresize-column.directive.ts
+ 
+ ###########################################################################################################################
+ 
+stackblitz.com/edit/angular-search-filter-kkdyty?file=app%2Fapp.component.html
+#############################################################################################
+subject with debounce example
+https://stackblitz.com/edit/angular-4znwkc?file=src%2Fapp%2Fapp.component.html
+https://stackoverflow.com/questions/54475317/how-to-settimeout-keyup-in-angular-7
+
+#################################################################################################
+https://stackoverflow.com/questions/35149535/how-to-implement-ngmodel-on-custom-elements
+
+###################################################################################################
+https://careydevelopment.us/blog/how-to-sort-complex-objects-in-angular-material-table-columns
+
+######################################################################################################
+expandable rows in angular material table
+https://stackblitz.com/angular/eaajjobynjkl?file=src%2Fapp%2Ftable-expandable-rows-example.html
+
+add multiTemplateDataRows to table tag.=By adding it allows the Data object to add multiple rows in the datatable.
+
+error due to [@detail-expand]
+
+https://blog.davidjs.com/2021/02/angular-animation-trap/
+
+
+for matpagination -> show first last buttons-> add [length] and assign it to length of datasource for buttons to work.
+51
+
+By setting the filterPredicate, you only define how a filter value should be
+applied on your data when a filter value is given.
+It's only the definition of the filter function,
+you do not actually apply the filter with it. Hence, you only need to define this once,
+which could for example happen in the ngOnInit.
+
+ngOnInit() {
+  this.dataSource.filterPredicate =
+      (data: Skill, filter: string) => !filter || data.level == filter;
+}
+To then apply your filter with an actual value, you need to set dataSource.filter, for example:
+
+toggleSkillLevel(level) {
+  this.dataSource.filter = level;
+}
+
+
+###########################################################################################
+https://levelup.gitconnected.com/how-to-create-a-reusable-modal-dialog-component-in-angular-8-241cc738d260
+
+Use the dialog component as dialog as well as normal component.
+https://www.freakyjolly.com/angular-material-dialog-modal-pass-data-between-parent-component-tutorial/
+https://stackoverflow.com/questions/57992753/using-component-as-dialog-ref-but-not-always
+
+###################################################################################################
+expand all the expandable rows-
+https://stackblitz.com/edit/angular-gfny52?file=app%2Ftable-expandable-rows-example.ts
+
+##########################################################################################################
+
+when using behaviour subject, If you want to detect the behaviour subject value changes-
+
+
+export class HomePageComponent implements OnInit {
+  userPermission: string = null;
+  searchLog: Boolean = false;
+ => private $unsubscribe = new Subject();
+
+  constructor(private loadingSpinnerService: LoadingSpinnerService, private sharedService: SharedService) {
+    this.loadingSpinnerService.setLoader(true);
+    this.userPermission = this.sharedService.userPermission;
+  }
+
+  ngOnInit(): void {
+  =>  this.sharedService.getsearchLog().pipe(takeUntil(this.$unsubscribe)).subscribe((data) => {
+      this.searchLog = data;
+    });
+  }
+
+  ngOnDestroy() {
+   => this.$unsubscribe.next();
+   => this.$unsubscribe.complete();
+  }
+
+}
+
+
+So it will subscribe to the observable until the component is destroyed.
+If we do not do so, it will only detect the first value change.
+####################################################################################################################
+
+the expanded row breaks after sorting is added to the table.
+https://stackoverflow.com/questions/52278357/matsort-breaks-mattable-detail-row-animations
+
+###################################################################################################################
+
+ floatLabel='never'
+ 
+ adding this to matformfeild tag will not allow the placeholder in matinput to go to top on focusing.
+ placeholder will vanish when clicking the input.
+
+##############################################################################################################
+
+ellipsis does not show up when we apply display flex to a class of an element.
+
+https://semicolon.dev/tutorial/css/text-overflow-ellipsis-doesnt-work
+
+#######################################################################################################
+select tag not disabled with [disabled] as it is not angular element.
+stackoverflow.com/questions/49087887/angular-4-select-disabled-is-not-working
+
+#########################################################################################################################
+stackoverflow.com/questions/60409270/angular-9-error-this-constructor-was-not-compatible-with-dependency-injection
+
+######################################################################################################################################
+to cover matdialog data inside constructor.
+ {
+          // I was expecting this will pass the desired value
+          provide: MAT_DIALOG_DATA,
+          useValue: matDialogStub
+        },
+
+inside providers array.
+
+####################################################################################################################################
+NG0304: 'mat-icon' is not a known element: error in console for unit testing
+
+add matIconModule in imports in spec file
+
+Can't bind to 'matAutocomplete' since it isn't a known property of 'input'.
+add MatAutocompleteModule in imports
+
+Can't bind to 'formControl' since it isn't a known property of 'input'.
+While using formControl, you have to import ReactiveFormsModule to your imports array.
+
+Error retrieving icon in jasmine unit test
+import { MatIconTestingModule } from '@angular/material/icon/testing';
+
+NullInjectorError: R3InjectorError(DynamicTestModule)[MatDialog -> MatDialog]: 
+  NullInjectorError: No provider for MatDialog!
+//add matDialog to providers array in spec file.
+NullInjectorError: R3InjectorError(DynamicTestModule)[MatDialog -> Overlay -> Overlay]: 
+  NullInjectorError: No provider for Overlay!
+add MatDialogModule to imports array.
+
+ 'app-templates-list' is not a known element:
+add component to the declarations array in spec file.
+instaed of this add-  schemas: [
+        CUSTOM_ELEMENTS_SCHEMA
+      ],
+
+
+NullInjectorError: R3InjectorError(DynamicTestModule)[HomeService -> HttpClient -> HttpClient]: 
+  NullInjectorError: No provider for HttpClient!
+add HttpClientModule to imports array
+alternately=>
+add  HttpClientTestingModule, in imports
+and add  {
+          provide: SharedService,
+          useValue: sharedServiceStub
+        }
+
+
+NullInjectorError: R3InjectorError(DynamicTestModule)[ToasterService -> ToasterService]: 
+  NullInjectorError: No provider for ToasterService!
+ToasterService in providers array
+
+
+no-provider-for-injectiontoken-toastconfig-in-jasmine
+ ToastrModule.forRoot({
+        positionClass :'toast-bottom-right'
+      })
+
+
+################################################################################################
+@ViewChild(ClrForm, {static: false}) clrForm;
+With static turned off, the @ViewChild reference gets updated by Angular when the *ngIf directive changes.
+
+###########################################################################################################
+
+VVIP:ExpressionChangedAfterItHasBeenCheckedError Explained
+https://suneetbansal.medium.com/angular-expressionchangedafterithasbeencheckederror-lets-see-why-it-comes-and-how-can-fix-it-22fc905ee01e
+
+#####################################################################################################################
+
+set the sort active column and direction as it was earlier-
+store the data in shared service with (matSortChange)="onSortEvent($event)" triggered in table tag.
+Also adding [matSortActive]="sharedService.active" [matSortDirection]="sharedService.direction"
+
+in ts file-
+  onSortEvent(eventData) {
+    this.sharedService.direction = eventData['direction'];
+    this.sharedService.active = eventData['active']
+  }
+
+ ngAfterViewInit(): void {
+    if (this.dataSource) {
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+    }
+    this._ref.detectChanges();
+  }
+
+######################################################################################################################################
+
+push commits from master to dev branch
+You are on master branch and push commits on dev branch. master branch has git commit done.
+
+When pushing to a non-default branch, you need to specify the source ref and the target ref:
+
+git push origin branch1:branch2
+Or
+
+git push <remote> <branch with new changes>:<branch you are pushing to> 
+
+#######################################################################################################################################
+
+when doing ng s we get this message-
+"This is a simple server for use in testing or debugging Angular applications locally. It hasn't been reviewed for security issues.
+
+DON'T USE IT FOR PRODUCTION!"
+
+to avoid this - in the angular.json file add below lines-
+ "scripts": [],
+            "vendorChunk": true,
+            "extractLicenses": false,
+            "buildOptimizer": false,
+            "sourceMap": true,
+            "optimization": false,
+            "namedChunks": true
+
+
+
+#################################################################
+How to import mock file
+
+import * as getAuditHistory from '../../../../mocks/getAuditHistory.json';
+
+inside describe component-
+const getAuditHistoryData = JSON.parse(JSON.stringify(auditData));
+
+create stub pf shared service if this data is response of api called in the method in shared service.
+
+const sharedServiceStub={
+    auditData: () => {
+      return (of(getAuditHistoryData.default)) //if method is //of type observable use of
+    },
+}
+
+##############################################################
+Can't bind to 'dataSource' since it isn't a known property of 'table'
+import - MatTableModule in imports array
+
+############################################################
+NG0303: Can't bind to 'formControl' since it isn't a known property of 'input'
+
+imports array- ReactiveFormsModule
+
+
+############################################################
+Error: Unexpected synthetic property @detailExpand found. Please make sure that:
+  - Either `BrowserAnimationsModule` or `NoopAnimationsModule` are imported in your application.
+  - There is corresponding configuration for the animation named `@detailExpand` defined in the `animations` field of the `@Component` decorator (see https://angular.io/api/core/Component#animations).
+
+
+imports array- ReactiveFormsModule,BrowserAnimationsModule
+also add below-
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed, void', style({ height: '0px', minHeight: '0' })),
+      state('collapsed', style({ height: '0px', minHeight: '0' })),
+      state('expanded', style({ height: '*' })),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ]),
+  ]
+
+###############################################################
+Error: <spyOn> : could not find an object to spy upon for getAuditLog()
+Usage: spyOn(<object>, <methodName>)
+
+inject the service - sortService = TestBed.get(SortService); inside beforeEach
+
+################################################################
+When you get the error No value accessor for form control with unspecified name attribute, there are generally two things that possibly has gone wrong:
+
+You are using ngModel with a third party control that doesn't register a NG_VALUE_ACCESSOR. In this case you need to use ngDefaultControl on the element.
+
+Alternatively you have forgotten to register a NG_VALUE_ACCESSOR for your custom form input:
+
+providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => MyInputField),
+      multi: true
+    }
+  ]
+
+#################################################################UNIT TEST FOR SERVICE
+ createSymptom(reqPayload): Observable<any> {
+    return this.post('saveSymptom', null, reqPayload).pipe(catchError(this.handleError));
+  }
+
+it('should call create symptom', () => {
+    spyOn(service, 'post').and.returnValue(of(saveSymptomResponse));
+    service.createSymptom(getSymptom).subscribe((data) => {
+      expect(data).toEqual(saveSymptomResponse);
+    });
+  })
+
+ setModifiedSymptom(modifiedSymptomData) {
+    this.modifiedSelectedSymptom.next(modifiedSymptomData);
+  }
+
+ it('setModifiedSymptom', async () => {
+    const spySetUpdateSymptom = spyOn(service, 'setModifiedSymptom').and.callThrough();
+    const modifySymptomModel: Symptoms = null;
+    service.setModifiedSymptom(modifySymptomModel);
+    expect(spySetUpdateSymptom).toHaveBeenCalled();
+  });
+
+getModifiedSymptom(): Observable<DeflectionSymptom> {
+    return this.modifiedSelectedSymptom.asObservable();
+  }
+
+
+  it('should call getModifiedSymptom', () => {
+    service.getModifiedSymptom().subscribe((result) => {
+      expect(result).toBeDefined();
+    })
+  })
+
+#################################################################
+unit test for method containing emit
+onSearch(searchTerm: string): void {
+    this.searched.emit(searchTerm);
+  }
+
+ it('onSearch test', () => {
+    const emitSpy = spyOn(component.searched, 'emit');
+    component.onSearch('test');
+    expect(emitSpy).toHaveBeenCalled();
+  });
+
+########################################################################
+Error:cant-bind-to-ngif-since-it-isnt-a-known-property-of-div
+
+created a module-> created a component. bUt module not added to the app.module.ts
+Add the new module to app.module.ts
+
+###################################################################################
+
+subscribe depricated in angular 13
+angular 14 has new way of subscribing.
+
+For example, in above case, instead of writing this...
+
+this.isHandsetObserver.subscribe(currentObserverValue => {
+      this.isHandset = currentObserverValue;
+      this.loadCards();
+    });
+
+    this.appService.getDeals().subscribe(
+      response => {
+        this.cardsForHandset = response.handsetCards;
+        this.cardsForWeb = response.webCards;
+        this.loadCards();
+      },
+      error => {
+        alert('There was an error in retrieving data from the server');
+      }
+    );
+
+we will be writing...
+
+this.isHandsetObserver.subscribe({
+    next: (currentObserverValue) => {
+        this.isHandset = currentObserverValue;
+        this.loadCards();
+    }
+});
+
+this.appService.getDeals().subscribe({
+    next: (response) => {
+        this.cardsForHandset = response.handsetCards;
+        this.cardsForWeb = response.webCards;
+        this.loadCards();
+    },
+    error: (error) => {
+        alert('There was an error in retrieving data from the server');
+    }
+});
+
+################################################################################
+Lifecycle methods should not be empty eslint@angular-eslint/no-empty-lifecycle-method
+TSLint was still supported by Angular, even though it had been deprecated, till the release of Angular CLI v12. 
+In package.json= "tslint": "~6.1.0",
+https://www.telerik.com/blogs/angular-basics-using-eslint-boost-code-quality
+
+###########################################################################################################################
+Support for passing an error value will be removed in v8. Instead, pass a factory function to throwError(() => new Error('test')). This is because it will create the error at the moment it should be created and capture a more appropriate stack trace. If for some reason you need to create the error ahead of time, you can still do that: const err = new Error('test'); throwError(() => err);
+
+Earlier we used like this.
+return throwError(new Error('error'));
+
+
+#############################################################################################################################
+filter Boolean
+var a = [1, 2, "b", 0, {}, "", NaN, 3, undefined, null, 5];
+
+var b = a.filter(Boolean);  // [1, 2, "b", {}, 3, 5]; 
+#########################################################
+
+Error: ASSERTION ERROR: index [Expected=> 0 < 0 <=Actual]
+TypeError: Cannot read properties of null (reading 'destroyed')
+
+some pipe was missing- added in the declarations.
+
+################################################################################
+The loader "C:/Users/apurva.n.gupta/Documents/Angular/batch-account-ui/src/app/shared/loading-spinner/loading-spinner.component.css" didn't return a string.
+
+in the ts file - 
+replace styleUrls: ['./loading-spinner.component.css'],
+with styleUrls: ['./loading-spinner.component.scss'], 
+
+############################################################################################################
+finally rxjs explained beautifully
+https://upmostly.com/angular/what-does-the-finalize-operator-do-in-angular-rxjs
+
+###############################################################################################################
+Angular App Optimisation
+https://christianlydemann.com/the-complete-guide-to-angular-load-time-optimization/
+
+#################################################################################################################################
+Boost angular app loading time- lazy loading
+https://blog.bitsrc.io/preloading-strategies-boost-up-angular-app-loading-time-ffb19da63155
+
+####################################################################################################################################
+
+es2019- supports flat()
+change the lib options to have es2019 or above to use flat()
+used to flatten 3 array of array in 1 array.
+
+###########################################################################################################################################
+this.selectedRule = ({} as any) as IDeflectionRule;
+
+to again make the object empty of type IDeflectionRule interface.
+
+#####################################################################################################################################
+FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory angular
+This error occured when I was using the node version 16.13.0 23 bit and trying to upgrade to angular 15.
+Solution- change the version of node. probably that version had bugs/issues.
+
+##########################################################################################################################
+
+upgrade to angular 15 - errors
+Error: Module build failed (from ./node_modules/sass-loader/dist/cjs.js):
+SassError: Only 0 arguments allowed, but 1 was passed.
+  ┌──> src\styles.scss
+
+$custom-typography: mat.define-legacy-typography-config($font-family: 'Poppins');
+// TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
+//  The following line adds:
+//    1. Default typography styles for all components
+//    2. Styles for typography hierarchy classes (e.g. .mat-headline-1)
+//  If you specify typography styles for the components you use elsewhere, you should delete this line.
+//  If you don't need the default component typographies but still want the hierarchy styles,
+//  you can delete this line and instead use:
+//    `@include mat.legacy-typography-hierarchy($custom-typography);`
+@include mat.all-legacy-component-typographies($custom-typography);
+@include mat.legacy-core();
+
+#############################################################################################################################
+For Repository is not clean. Update changes will be mixed with pre-existing changes
+Use --allow-dirty
+
+###############################################################################################################################
+ Property 'get' in type 'T47     get<T>(token: any, notFoundValue?: T, flags?: InjectFlags): T | ToastPackage;
+updated the ngx-toater to version 15 -  "ngx-toastr": "^15.2.2" added in package.json
+
+##################################################################################################################################
+If angular app depends on ng update @angular/flex-layout@12 then upgrade this in incremental way. One version by another.
+
+####################################################################################################################################
+Angular 15 update process
+https://levelup.gitconnected.com/angular-upgrade-26d331837012
+https://medium.com/ngconf/whats-new-in-angular-material-15-a196e606a33
+
+After running the mdc-migration I still found some places where the old .mat-... was used, without an -mdc suffix. The easiest to find them was a negative lookahead regex group.
+
+The regex: \.mat-(?!mdc). This matches every .mat- string that is not followed by mdc.
+###################################################################################################################################
+Error- polyfills.ts is missing from the TypeScript compilation. Please make sure it is in your tsconfig via the 'files' or 'include' property.
+Fix- add     "src/polyfills.ts" in files array in tsconfig.app.json
+  "files": [
+    "src/main.ts",
+    "src/polyfills.ts"
+  ],
+##############################################################################################################################################
+Migrate to mdc-
+https://material.angular.io/guide/mdc-migration
+
+####################################################################################################################################################
+If the form feild breaks after upgrade-
+ All newer appearance settings require explicitly specifying a <mat-label> if one was not provided before. This change addresses an accessibility best practice of not using labels and placeholders interchangeably.
+placeholder won't work - add matlable inside the mat-form-field tag.
+
+#####################################################################################################################################
+Error: <spyOn> : could not find an object to spy upon for showToast()
+
+declare - let sharedService: SharedService;
+Try to add the injector in test case file
+Like - sharedService= TestBed.inject(SharedService); for the service in which that func is present.
+
+#######################################################################################################################################
+
+FileReader-
+windows has \r\n and linux has \n when reading csv file
+
+#####################################################################################################################################
+Adding retry in angular-
+this.createBatchService.createContainer(request).pipe(takeUntil(this.$unsubscribe)
+        // ,retryWhen(error => 
+        //   error.pipe(
+        //     concatMap((error, count) => {
+        //       if (count <= this.retryCount && error.status == 504) {
+        //         return of(error);ssss
+        //       }
+        //       return throwError(error);
+        //     }),
+        //     delay(this.retryWaitMilliSeconds)
+        //   ))
+      ).subscribe({
+
+########################################################################################################################################################
+unit tests for recursive calls in jamsine
+https://stackoverflow.com/questions/26898613/how-to-have-different-return-values-for-multiple-calls-on-a-jasmine-spy
+Example-
+it('if user modified aliases before saving', () => {
+    component.version = 1;
+    spyOn(apigatewayAdminService, 'putAliases').and.callFake(() => {
+      if (component.versionUpdate) {
+        component.versionUpdate = false;
+        return of(MOCK_SUCCESS_RESPONSE);
+      }
+      else {
+        component.versionUpdate = true;
+        return throwError(MOCK_ERROR_RESPONSE_VERSION);
+      }
+    })
+    spyOn(component.dialog, 'open')
+      .and.returnValue(
+        { afterClosed: () => of(true) } as MatDialogRef<typeof component>
+      );
+    component.submitAliases();
+    expect(component.versionUpdate).toBe(false);
+  })
+
+###########################################################################
+ANGULAR 16 NEW ===
+Signals-A signal can be recognized as a regular variable that users can synchronously access. But it comes with some additional features like notifying others (component templates, other signals, functions, etc.) of its value changes and creating a derived state in a declarative way.
+
+Angular 16 allows you to bind route parameters into component inputs, removing the need to inject ActivatedRoute into the components. To enable this feature, you must import RouterModule and enable the bindToComponentInputs property in the app.module.ts file.
+
+App.module.ts
+@NgModule({
+ imports: [
+   ...
+   RouterModule.forRoot([], {
+     bindToComponentInputs: true 
+   })
+   ...
+ ],
+ ...
+})
+export class AppModule {}
+Article Component
+// Route
+const routes: Routes = [
+ {
+   path: "articles",
+   component: ArticleComponent,
+ },
+];
+
+// Component
+@Component({})
+export class ArticleComponent implements OnInit {
+  
+  @Input() articleId?: string; 
+  
+  ngOnInit() {
+  
+  }
+}
+
+http://localhost:4200/articles?id=001
+
+@Input('id') articleId?: string;
+Ref-syncfusion.com/blogs/post/angular-16-top-7-features.aspx
+
+
